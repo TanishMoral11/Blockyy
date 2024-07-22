@@ -1,0 +1,13 @@
+{
+    "manifest_version": 3,
+    "name": "Block Cringe Videos",
+    "version": "1.0",
+    "description": "Blocks YouTube Shorts with cringe-inducing keywords in titles/descriptions",
+    "content_scripts": [
+      {
+        "matches": ["https://www.youtube.com/shorts*"],
+        "js": ["content.js"]
+      }
+    ]
+  }
+  
