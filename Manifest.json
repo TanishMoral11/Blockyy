@@ -1,13 +1,25 @@
 {
     "manifest_version": 3,
-    "name": "Block Cringe Videos",
+    "name": "YouTube Shorts Content Filter",
     "version": "1.0",
-    "description": "Blocks YouTube Shorts with cringe-inducing keywords in titles/descriptions",
+    "description": "Filters out potentially non-informative YouTube Shorts",
+    "permissions": [
+      "activeTab",
+      "storage"
+    ],
+    "host_permissions": [
+      "https://www.youtube.com/*"
+    ],
+    "background": {
+      "service_worker": "background.js"
+    },
     "content_scripts": [
       {
-        "matches": ["https://www.youtube.com/shorts*"],
+        "matches": ["https://www.youtube.com/*"],
         "js": ["content.js"]
       }
-    ]
+    ],
+    "action": {
+      "default_popup": "popup.html"
+    }
   }
-  
