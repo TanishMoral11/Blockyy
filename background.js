@@ -48,17 +48,34 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
   
   async function analyzeContent(data) {
-    const nonInformativeWords = ['funny', 'hot', 'girl', 'cringe', /* add more words */];
+    const nonInformativeWords = ['funny', 'prank', 'challenge', 'viral', 'cringe', 'reaction'];
+    const educationalWords = ['learn', 'education', 'tutorial', 'how to', 'explainer', 'science', 'history', 'math'];
     
-    const geminiAnalysis = await analyzeWithGemini(data);
-    
-    const containsNonInformativeWords = nonInformativeWords.some(word => 
-      data.title.toLowerCase().includes(word) || 
-      data.description.toLowerCase().includes(word) ||
-      data.comments.some(comment => comment.toLowerCase().includes(word))
+    const title = data.title.toLowerCase();
+    const description = data.description.toLowerCase();
+    const comments = data.comments.map(comment => comment.toLowerCase());
+  
+    // Check for educational content
+    const isEducational = educationalWords.some(word => 
+      title.includes(word) || description.includes(word)
     );
-    
-    return geminiAnalysis.isNonInformative || containsNonInformativeWords;
+  
+    if (isEducational) {
+      return false; // Don't block educational content
+    }
+  
+    // Check for non-informative content
+    const containsNonInformativeWords = nonInformativeWords.some(word => 
+      title.includes(word) || 
+      description.includes(word) ||
+      comments.some(comment => comment.includes(word))
+    );
+  
+    // Use Gemini API for more nuanced content analysis
+    const geminiAnalysis = await analyzeWithGemini(data);
+  
+    // Combine simple keyword matching with Gemini analysis
+    return containsNonInformativeWords || geminiAnalysis.isNonInformative;
   }
   
   async function analyzeWithGemini(data) {
