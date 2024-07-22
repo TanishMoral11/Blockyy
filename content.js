@@ -18,7 +18,7 @@ const observer = new MutationObserver((mutations) => {
     if (videoId) {
       chrome.runtime.sendMessage({action: 'analyzeYouTubeShort', videoId: videoId}, (response) => {
         if (response && response.block) {
-          blockYouTubeShort(playerElement);
+          blockYouTubeShort(playerElement, response.reason);
         }
       });
     } else {
@@ -43,10 +43,10 @@ const observer = new MutationObserver((mutations) => {
     return null;
   }
   
-  function blockYouTubeShort(playerElement) {
+  function blockYouTubeShort(playerElement, reason) {
     playerElement.style.display = 'none';
     const message = document.createElement('div');
-    message.textContent = 'This Short has been blocked due to potentially non-informative content.';
+    message.textContent = `This Short has been blocked: ${reason}`;
     message.style.cssText = 'padding: 20px; text-align: center; background: #f0f0f0;';
     playerElement.parentNode.insertBefore(message, playerElement);
     
@@ -57,4 +57,13 @@ const observer = new MutationObserver((mutations) => {
       document.dispatchEvent(event);
     };
     message.appendChild(skipButton);
+  
+    const overrideButton = document.createElement('button');
+    overrideButton.textContent = 'Watch Anyway';
+    overrideButton.onclick = () => {
+      message.remove();
+      playerElement.style.display = '';
+    };
+    message.appendChild(overrideButton);
   }
+  
