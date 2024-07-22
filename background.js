@@ -3,14 +3,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       fetchYouTubeVideoDetails(request.videoId)
         .then(data => analyzeContent(data))
         .then(result => {
-          if (typeof result === 'boolean') {
-            sendResponse({block: result, reason: 'Potentially non-informative content'});
-          } else {
-            sendResponse({
-              block: result.isNonInformative, 
-              reason: `Educational score: ${result.educationalScore.toFixed(2)}, Entertainment score: ${result.entertainmentScore.toFixed(2)}`
-            });
-          }
+          sendResponse({
+            block: result.shouldBlock,
+            reason: result.reason
+          });
         });
       return true; // Indicates async response
     }
@@ -56,7 +52,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
   }
   
-  async function analyzeContent(data) {
+  function analyzeContent(data) {
     const nonInformativeWords = ['funny', 'prank', 'challenge', 'viral', 'cringe', 'reaction'];
     const educationalWords = ['learn', 'education', 'tutorial', 'how to', 'explainer', 'science', 'history', 'math'];
     
@@ -70,7 +66,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     );
   
     if (isEducational) {
-      return false; // Don't block educational content
+      return { shouldBlock: false, reason: 'Educational content' };
     }
   
     // Check for non-informative content
@@ -80,24 +76,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       comments.some(comment => comment.includes(word))
     );
   
-    // Use Gemini API for more nuanced content analysis
-    const geminiAnalysis = await analyzeWithGemini(data);
+    if (containsNonInformativeWords) {
+      return { shouldBlock: true, reason: 'Contains potentially non-informative content' };
+    }
   
-    // Combine simple keyword matching with Gemini analysis
-    return containsNonInformativeWords || geminiAnalysis.isNonInformative;
-  }
-  
-  async function analyzeWithGemini(data) {
-    // This is a placeholder. You'll need to implement the actual Gemini API call.
-    console.log("Analyzing with Gemini:", data);
-  
-    // For demonstration, let's simulate a more nuanced analysis
-    const educationalScore = Math.random();
-    const entertainmentScore = Math.random();
-  
-    return {
-      isNonInformative: entertainmentScore > 0.7 && educationalScore < 0.3,
-      educationalScore: educationalScore,
-      entertainmentScore: entertainmentScore
-    };
+    // If we're not sure, don't block
+    return { shouldBlock: false, reason: 'Content seems okay' };
   }
