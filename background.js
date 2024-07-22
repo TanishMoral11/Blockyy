@@ -79,8 +79,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
   
   async function analyzeWithGemini(data) {
-    // Placeholder for Gemini API integration
-    // You'll need to implement the actual API call here
+    // This is a placeholder. You'll need to implement the actual Gemini API call.
     console.log("Analyzing with Gemini:", data);
-    return { isNonInformative: Math.random() < 0.5 };
+  
+    // For demonstration, let's simulate a more nuanced analysis
+    const educationalScore = Math.random();
+    const entertainmentScore = Math.random();
+  
+    return {
+      isNonInformative: entertainmentScore > 0.7 && educationalScore < 0.3,
+      educationalScore: educationalScore,
+      entertainmentScore: entertainmentScore
+    };
   }
