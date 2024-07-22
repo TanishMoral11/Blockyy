@@ -2,7 +2,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === 'analyzeYouTubeShort') {
       fetchYouTubeVideoDetails(request.videoId)
         .then(data => analyzeContent(data))
-        .then(result => sendResponse({block: result}));
+        .then(result => {
+          if (typeof result === 'boolean') {
+            sendResponse({block: result, reason: 'Potentially non-informative content'});
+          } else {
+            sendResponse({
+              block: result.isNonInformative, 
+              reason: `Educational score: ${result.educationalScore.toFixed(2)}, Entertainment score: ${result.entertainmentScore.toFixed(2)}`
+            });
+          }
+        });
       return true; // Indicates async response
     }
   });
