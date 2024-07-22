@@ -15,17 +15,32 @@ const observer = new MutationObserver((mutations) => {
   function checkYouTubeShort(playerElement) {
     const videoId = getVideoIdFromUrl(window.location.href);
     
-    chrome.runtime.sendMessage({action: 'analyzeYouTubeShort', videoId: videoId}, (response) => {
-      if (response.block) {
-        blockYouTubeShort(playerElement);
-      }
-    });
+    if (videoId) {
+      chrome.runtime.sendMessage({action: 'analyzeYouTubeShort', videoId: videoId}, (response) => {
+        if (response && response.block) {
+          blockYouTubeShort(playerElement);
+        }
+      });
+    } else {
+      console.warn('No valid video ID found, skipping analysis');
+    }
   }
   
   function getVideoIdFromUrl(url) {
-    const regex = /(?:\/shorts\/|\/watch\?v=)([a-zA-Z0-9_-]{11})/;
-    const match = url.match(regex);
-    return match ? match[1] : null;
+    const patterns = [
+      /(?:\/shorts\/|\/watch\?v=|\/embed\/|\/v\/|\/youtu.be\/)([a-zA-Z0-9_-]{11})/,
+      /^([a-zA-Z0-9_-]{11})$/
+    ];
+  
+    for (let pattern of patterns) {
+      const match = url.match(pattern);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+  
+    console.warn('Could not extract video ID from URL:', url);
+    return null;
   }
   
   function blockYouTubeShort(playerElement) {

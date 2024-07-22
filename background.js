@@ -8,23 +8,43 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   });
   
   async function fetchYouTubeVideoDetails(videoId) {
-    const API_KEY = 'YOUR_YOUTUBE_API_KEY';
+    const API_KEY = 'AIzaSyAdu5SaUlQkjyaljTW9Ktm_116huxceSGM';
     const videoDetailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${API_KEY}`;
     const commentsUrl = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&maxResults=10&key=${API_KEY}`;
   
-    const [videoResponse, commentsResponse] = await Promise.all([
-      fetch(videoDetailsUrl),
-      fetch(commentsUrl)
-    ]);
+    try {
+      const [videoResponse, commentsResponse] = await Promise.all([
+        fetch(videoDetailsUrl),
+        fetch(commentsUrl)
+      ]);
   
-    const videoData = await videoResponse.json();
-    const commentsData = await commentsResponse.json();
+      const videoData = await videoResponse.json();
+      const commentsData = await commentsResponse.json();
   
-    return {
-      title: videoData.items[0].snippet.title,
-      description: videoData.items[0].snippet.description,
-      comments: commentsData.items.map(item => item.snippet.topLevelComment.snippet.textDisplay)
-    };
+      if (!videoData.items || videoData.items.length === 0) {
+        throw new Error('No video details found');
+      }
+  
+      return {
+        title: videoData.items[0].snippet.title || '',
+        description: videoData.items[0].snippet.description || '',
+        comments: (commentsData.items || []).map(item => {
+          try {
+            return item.snippet.topLevelComment.snippet.textDisplay;
+          } catch (e) {
+            console.warn('Error extracting comment:', e);
+            return '';
+          }
+        }).filter(comment => comment !== '')
+      };
+    } catch (error) {
+      console.error('Error fetching YouTube video details:', error);
+      return {
+        title: '',
+        description: '',
+        comments: []
+      };
+    }
   }
   
   async function analyzeContent(data) {
